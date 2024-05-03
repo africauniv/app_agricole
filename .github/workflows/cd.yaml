@@ -4,10 +4,14 @@ on:
   push:
     branches:
       - main
+  workflow_call:
+    secrets: 
+      SONAR_TOKEN:
+        required: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -28,23 +32,6 @@ jobs:
         run: dotnet build --configuration Debug
         # Ici on va ajouter vos commandes de test unitaire
 
-  sca_vulnerability:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      # Generates a BoM and uploads it to OWASP Dependency Track
-      - name: Generates BoM and upload to OWASP DTrack
-        id: riskscoreFromDT
-        uses:  Quobis/action-owasp-dependecy-track-check@main
-        with:
-          url: 'https://dtrack.quobis.com'
-          key: '${{ secrets.SECRET_OWASP_DT_KEY }}'
-          language: 'dotnet'
-      
-      # Show the risk score output 
-      - name: Get the output time
-        run: echo "The risk score of the project is ${{ steps.riskscoreFromDT.outputs.riskscore }}"
 
   code_security:
       name: Build and analyze sonarQube
