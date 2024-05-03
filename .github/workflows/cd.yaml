@@ -16,45 +16,40 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.0'
+          
+      - name: Install MAUI workload
+        run: dotnet workload install maui
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet workload restore
 
       - name: Build and test
         run: dotnet build --configuration Debug
         # Ici on va ajouter vos commandes de test unitaire
 
   sca_vulnerability:
-      name: Analyse vulnerability OWASP SCA Dependency-checker
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
         with:
-          dotnet-version: '8.0.x'
-        
-      - name: Restore dependencies
-        run: dotnet restore
-        
-      - name: Build 
-        run: dotnet build --configuration Release
-        
+          java-version: '11'
       - name: Run OWASP Dependency-Checker
-        uses: dependency-check/Dependency-Check-Action@main
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.4.2/dependency-check-6.4.2-release.zip
+          unzip dependency-check-6.4.2-release.zip
+          cd dependency-check/bin
+          ./dependency-check.sh --scan . --format HTML --out ${{ github.workspace }}
+  
+      - name: Upload Dependency-Checker Report
+        uses: actions/upload-artifact@v2
         with:
-          project: 'MAUI App'
-          path: '.'
-          format: 'HTML'
-          output: 'OWASP-Dependency-Report.html'
-          
-      - name: Upload OWASP Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: OWASP-Dependency-Report
-          path: OWASP-Dependency-Report.html
+          name: dependency-check-report
+          path: ${{ github.workspace }}
+
   code_security:
       name: Build and analyze sonarQube
       runs-on: windows-latest
