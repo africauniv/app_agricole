@@ -18,18 +18,45 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install MAUI workload
-        run: dotnet workload install maui
-
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build and test
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Debug
         # Ici on va ajouter vos commandes de test unitaire
 
-  security:
-      name: Build and analyze
+  sca_vulnerability:
+      name: Analyse vulnerability OWASP SCA Dependency-checker
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+        
+      - name: Restore dependencies
+        run: dotnet restore
+        
+      - name: Build 
+        run: dotnet build --configuration Release
+        
+      - name: Run OWASP Dependency-Checker
+        uses: dependency-check/Dependency-Check-Action@main
+        with:
+          project: 'MAUI App'
+          path: '.'
+          format: 'HTML'
+          output: 'OWASP-Dependency-Report.html'
+          
+      - name: Upload OWASP Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: OWASP-Dependency-Report
+          path: OWASP-Dependency-Report.html
+  code_security:
+      name: Build and analyze sonarQube
       runs-on: windows-latest
       steps:
         - name: Set up JDK 17
@@ -66,5 +93,6 @@ jobs:
           shell: powershell
           run: |
             .\.sonar\scanner\dotnet-sonarscanner begin /k:"africauniv_app_agricole" /o:"africauniv" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-            <insert_your_clean_build_command>
+            dotnet restore
+            dotnet build --configuration Debug
             .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
