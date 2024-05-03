@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_call:
-    secrets: 
-      SONAR_TOKEN:
-        required: true
- 
 jobs:
   build:
     runs-on: windows-latest
@@ -70,7 +65,7 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           shell: powershell
           run: |
-            .\.sonar\scanner\dotnet-sonarscanner begin /k:"africauniv_app_agricole" /o:"africauniv" /d:sonar.token="${SONAR_TOKEN}" /d:sonar.host.url="https://sonarcloud.io"
+            .\.sonar\scanner\dotnet-sonarscanner begin /k:"africauniv_app_agricole" /o:"africauniv" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
             dotnet restore
             dotnet build --configuration Debug
-            .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${SONAR_TOKEN }"
+            .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
