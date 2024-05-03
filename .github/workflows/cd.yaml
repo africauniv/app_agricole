@@ -8,7 +8,7 @@ on:
     secrets: 
       SONAR_TOKEN:
         required: true
-
+ 
 jobs:
   build:
     runs-on: windows-latest
