@@ -26,24 +26,7 @@ jobs:
       - name: Build and test
         run: dotnet build --configuration Debug
         # Ici on va ajouter vos commandes de test unitaire
-  dependency_security:
-      name: analyse dependency with owasp
-      runs-on: linux-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-        - name: install owasp dependency
-          run: |
-            wget -O dependency-check.zip https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-CD0267EN-SkillsNetwork/labs/module2/data/dependency-check.zip && unzip dependency-check.zip && chmod +x dependency-check/bin/dependency-check.sh && sudo echo "alias dependency-check=$(pwd)/dependency-check/bin/dependency-check.sh" >> ~/.bashrc && source ~/.bashrc
-        - name: Exécuter la commande d'analyse
-          run: |
-            dependency-check -f HTML --prettyPrint --scan app_agricole
-        - name: Sauvegarder le rapport en tant qu'artefact
-          uses: actions/upload-artifact@v2
-          with:
-            name: rapport-dependency-check
-            path: dependency-check-report.html 
+        
   code_security:
       name: Build and analyze sonarQube
       runs-on: windows-latest
@@ -85,3 +68,22 @@ jobs:
             dotnet restore
             dotnet build --configuration Debug
             .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+  dependency_security:
+      name: analyse dependency with owasp
+      runs-on: linux-latest
+      needs: code_security
+      steps:
+        - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+        - name: install owasp dependency
+          run: |
+            wget -O dependency-check.zip https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-CD0267EN-SkillsNetwork/labs/module2/data/dependency-check.zip && unzip dependency-check.zip && chmod +x dependency-check/bin/dependency-check.sh && sudo echo "alias dependency-check=$(pwd)/dependency-check/bin/dependency-check.sh" >> ~/.bashrc && source ~/.bashrc
+        - name: Exécuter la commande d'analyse
+          run: |
+            dependency-check -f HTML --prettyPrint --scan app_agricole
+        - name: Sauvegarder le rapport en tant qu'artefact
+          uses: actions/upload-artifact@v2
+          with:
+            name: rapport-dependency-check
+            path: dependency-check-report.html 
